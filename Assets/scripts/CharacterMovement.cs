@@ -3,27 +3,35 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
     public float speed = 5f;
+    public float rotationSpeed = 1200f; // <-- Bu deðeri artýrdýk (Örn: 720 yerine 1200 yaptýk)
+    private CharacterController controller;
     private Animator animator;
 
     void Start()
     {
-        // Karakterin üzerindeki Animator bileþenini alýyoruz
+        controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        float turn = Input.GetAxisRaw("Horizontal"); // A ve D tuþlarý (Saða/Sola dönme)
+        float move = Input.GetAxisRaw("Vertical");   // W ve S tuþlarý (Ýleri/Geri gitme)
 
-        Vector3 movement = new Vector3(x, 0f, z);
-
-        // Eðer tuþlara basýlýyorsa (hareket varsa)
-        if (movement.magnitude > 0.1f)
+        // 1. Karakteri saða veya sola döndür (A ve D tuþlarý)
+        if (turn != 0)
         {
-            // Karakterin hareket ettiði yöne dönmesini saðlar
-            Quaternion targetRotation = Quaternion.LookRotation(movement);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.15f);
+            float rotationAmount = turn * rotationSpeed * Time.deltaTime;
+            transform.Rotate(0, rotationAmount, 0);
+        }
+
+        // 2. W veya S tuþuna basýldýðýnda karakterin baktýðý yöne doðru hareket et
+        Vector3 moveDir = transform.forward * move;
+
+        if (moveDir.magnitude >= 0.1f)
+        {
+            // Karakter Controller ile hareket ettiriyoruz (duvarlardan geçmez, yere basar)
+            controller.Move(moveDir.normalized * speed * Time.deltaTime);
 
             // Yürüme animasyonunu baþlat
             if (animator != null) animator.SetBool("isWalking", true);
@@ -33,7 +41,5 @@ public class CharacterMovement : MonoBehaviour
             // Duruyorsa Idle animasyonuna dön
             if (animator != null) animator.SetBool("isWalking", false);
         }
-
-        transform.Translate(movement * speed * Time.deltaTime, Space.World);
     }
 }
