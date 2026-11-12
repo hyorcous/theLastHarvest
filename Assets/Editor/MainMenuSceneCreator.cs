@@ -47,49 +47,48 @@ public class MainMenuSceneCreator
         var menuUI = canvasGO.AddComponent<MainMenuUI>();
 
         // ── Arkaplan ─────────────────────────────────────────────────
-        MakePanel(canvasGO.transform, "Background",
+        var bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/menu_background.jpg");
+        var bgGO = MakePanel(canvasGO.transform, "Background",
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-            new Color(0.051f, 0.039f, 0.020f, 1f));
+            Color.white);
+        if (bgSprite != null)
+        {
+            var bgImg = bgGO.GetComponent<Image>();
+            bgImg.sprite = bgSprite;
+            bgImg.preserveAspect = false;
+        }
 
-        // Hafif karanlık üst katman
-        MakePanel(canvasGO.transform, "DarkOverlay",
-            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-            new Color(0f, 0f, 0f, 0.25f));
+        // ── Başlık / Logo ─────────────────────────────────────────────
+        var logoSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/game_logo.png");
+        if (logoSprite != null)
+        {
+            var logoGO = new GameObject("Title");
+            logoGO.transform.SetParent(canvasGO.transform, false);
+            var logoRect = logoGO.AddComponent<RectTransform>();
+            SetAnchored(logoRect, new Vector2(0.5f, 0.74f), new Vector2(750, 281));
+            var logoImg = logoGO.AddComponent<Image>();
+            logoImg.sprite = logoSprite;
+            logoImg.preserveAspect = true;
+        }
+        else
+        {
+            MakeTMP(canvasGO.transform, "Title",
+                new Vector2(0.5f, 0.76f), new Vector2(860, 130),
+                "THE LAST HARVEST",
+                80, FontStyles.Bold, TextAlignmentOptions.Center,
+                new Color(0.784f, 0.588f, 0.165f), letterSpacing: 10f);
 
-        // Sol altın şerit
-        MakePanel(canvasGO.transform, "LeftAccent",
-            new Vector2(0f, 0f), new Vector2(0.005f, 1f), Vector2.zero, Vector2.zero,
-            new Color(0.784f, 0.588f, 0.165f, 0.7f));
+            MakeTMP(canvasGO.transform, "Subtitle",
+                new Vector2(0.5f, 0.67f), new Vector2(680, 45),
+                "\u2014  \u00c7iftlik Maceras\u0131  \u2014",
+                24, FontStyles.Italic, TextAlignmentOptions.Center,
+                new Color(0.62f, 0.46f, 0.20f), letterSpacing: 4f);
 
-        // Sağ altın şerit
-        MakePanel(canvasGO.transform, "RightAccent",
-            new Vector2(0.995f, 0f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero,
-            new Color(0.784f, 0.588f, 0.165f, 0.7f));
-
-        // Orta yarı-saydam panel (içerik alanı)
-        MakePanel(canvasGO.transform, "ContentPanel",
-            new Vector2(0.28f, 0.05f), new Vector2(0.72f, 0.95f), Vector2.zero, Vector2.zero,
-            new Color(0.09f, 0.06f, 0.03f, 0.65f));
-
-        // ── Başlık ───────────────────────────────────────────────────
-        MakeTMP(canvasGO.transform, "Title",
-            new Vector2(0.5f, 0.76f), new Vector2(860, 130),
-            "THE LAST HARVEST",
-            80, FontStyles.Bold, TextAlignmentOptions.Center,
-            new Color(0.784f, 0.588f, 0.165f), letterSpacing: 10f);
-
-        // Alt başlık
-        MakeTMP(canvasGO.transform, "Subtitle",
-            new Vector2(0.5f, 0.67f), new Vector2(680, 45),
-            "\u2014  \u00c7iftlik Maceras\u0131  \u2014",
-            24, FontStyles.Italic, TextAlignmentOptions.Center,
-            new Color(0.62f, 0.46f, 0.20f), letterSpacing: 4f);
-
-        // Ayırıcı çizgi
-        MakePanel(canvasGO.transform, "Divider",
-            new Vector2(0.5f, 0.615f), new Vector2(0.5f, 0.615f),
-            new Vector2(-240f, -1f), new Vector2(240f, 1f),
-            new Color(0.784f, 0.588f, 0.165f, 0.35f));
+            MakePanel(canvasGO.transform, "Divider",
+                new Vector2(0.5f, 0.615f), new Vector2(0.5f, 0.615f),
+                new Vector2(-240f, -1f), new Vector2(240f, 1f),
+                new Color(0.784f, 0.588f, 0.165f, 0.35f));
+        }
 
         // ── Buton Konteyneri ─────────────────────────────────────────
         var containerGO   = new GameObject("ButtonContainer");
@@ -151,7 +150,7 @@ public class MainMenuSceneCreator
     }
 
     // ─── Yardımcı: Tam ekran / konumlu Image paneli ──────────────────
-    static void MakePanel(Transform parent, string name,
+    static GameObject MakePanel(Transform parent, string name,
         Vector2 ancMin, Vector2 ancMax,
         Vector2 offMin, Vector2 offMax,
         Color color)
@@ -164,6 +163,7 @@ public class MainMenuSceneCreator
         rect.offsetMin  = offMin;
         rect.offsetMax  = offMax;
         go.AddComponent<Image>().color = color;
+        return go;
     }
 
     // ─── Yardımcı: Ortalanmış TextMeshProUGUI ────────────────────────
@@ -210,14 +210,24 @@ public class MainMenuSceneCreator
         rect.sizeDelta = new Vector2(400, 65);
 
         var img = btnGO.AddComponent<Image>();
-        img.color = new Color(0.13f, 0.09f, 0.04f, 1f);
+        var woodSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/sprites/button_wood.png");
+        if (woodSprite != null)
+        {
+            img.sprite = woodSprite;
+            img.type   = Image.Type.Sliced;
+            img.color  = Color.white;
+        }
+        else
+        {
+            img.color = new Color(0.13f, 0.09f, 0.04f, 1f);
+        }
 
         var btn    = btnGO.AddComponent<Button>();
         var colors = btn.colors;
-        colors.normalColor      = new Color(0.13f, 0.09f, 0.04f, 1f);
-        colors.highlightedColor = new Color(0.35f, 0.22f, 0.07f, 1f);
-        colors.pressedColor     = new Color(0.07f, 0.05f, 0.02f, 1f);
-        colors.selectedColor    = new Color(0.35f, 0.22f, 0.07f, 1f);
+        colors.normalColor      = Color.white;
+        colors.highlightedColor = new Color(1.00f, 0.88f, 0.70f, 1f);
+        colors.pressedColor     = new Color(0.60f, 0.40f, 0.25f, 1f);
+        colors.selectedColor    = new Color(1.00f, 0.88f, 0.70f, 1f);
         colors.fadeDuration     = 0.12f;
         btn.colors       = colors;
         btn.targetGraphic = img;
