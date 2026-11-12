@@ -2467,7 +2467,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 972d9db28f555814294578b3ae946050, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FarmGrid
-  soilPrefab: {fileID: 6160491520111798572, guid: ab11b6d83e38d0a4d8016afc75627e97, type: 3}
+  soilPrefab: {fileID: 5028381895635585597, guid: fd7ac75f6b7932646b053c86cf1472fd, type: 3}
   width: 5
   height: 5
   spacing: 1

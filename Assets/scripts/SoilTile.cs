@@ -2,14 +2,12 @@ using UnityEngine;
 
 public class SoilTile : MonoBehaviour
 {
-    public GameObject plantPrefab;
+    [Header("Tarla Prefab'leri")]
+    public GameObject drySoilPrefab; // Kuru tarla prefab'i
+    public GameObject wetSoilPrefab; // Islak tarla prefab'i
 
-    public Color dryColor = new Color(0.55f, 0.32f, 0.16f);
-    public Color wetColor = new Color(0.30f, 0.16f, 0.08f);
-    public Color selectedColor = new Color(0.70f, 0.45f, 0.25f);
-
-    private Renderer tileRenderer;
-    private Color originalColor;
+    [Header("Bitki Prefab'i")]
+    public GameObject plantPrefab; // Buðday (Wheat) Prefab'i
 
     private bool isPlanted = false;
     private bool isWatered = false;
@@ -22,9 +20,6 @@ public class SoilTile : MonoBehaviour
 
     void Start()
     {
-        tileRenderer = GetComponent<Renderer>();
-        originalColor = tileRenderer.material.color;
-
         // Death'in Animator bileþenini otomatik bulur
         if (playerAnimator == null)
         {
@@ -47,11 +42,16 @@ public class SoilTile : MonoBehaviour
     {
         if (selectedTile != null && selectedTile != this)
         {
-            selectedTile.UpdateColor();
+            selectedTile.DeselectVisual();
         }
 
         selectedTile = this;
-        UpdateColor();
+        // Seçildiðinde görsel bir efekt verebilirsin (isteðe baðlý)
+    }
+
+    public void DeselectVisual()
+    {
+        // Baþka tarla seçildiðinde yapýlacak görsel sýfýrlama (gerekirse)
     }
 
     public void PlantSeed()
@@ -91,8 +91,7 @@ public class SoilTile : MonoBehaviour
                     else
                     {
                         Debug.Log("Tarla sulandý! Kalan su hakký: " + InventoryManager.Instance.currentWater);
-                        // UI yenilenmesi için tetik
-                        InventoryManager.Instance.AddItem("FullBucket", 0);
+                        InventoryManager.Instance.AddItem("FullBucket", 0); // UI yenilenmesi için
                     }
 
                     isWatered = true;
@@ -103,7 +102,8 @@ public class SoilTile : MonoBehaviour
                         currentPlant.transform.localScale = new Vector3(0.3f, 1f, 0.3f);
                     }
 
-                    UpdateColor();
+                    // --- ÝÞTE BURADA KURU Tarlayý ISLAK Tarla ile Deðiþtiriyoruz ---
+                    SwitchToWetSoil();
                 }
             }
             else
@@ -113,17 +113,52 @@ public class SoilTile : MonoBehaviour
         }
     }
 
+    void SwitchToWetSoil()
+    {
+        if (wetSoilPrefab != null)
+        {
+            // Islak tarla prefab'ini bu tarlanýn olduðu pozisyonda oluþtur
+            Vector3 pos = transform.position;
+            Quaternion rot = transform.rotation;
+
+            // Eðer tarlanýn üzerinde bitki varsa, yeni oluþturduðumuz ýslak tarlanýn çocuðu yapalým ki kaybolmasýn
+            GameObject newWetTile = Instantiate(wetSoilPrefab, pos, rot);
+
+            SoilTile newSoilScript = newWetTile.GetComponent<SoilTile>();
+            if (newSoilScript != null)
+            {
+                newSoilScript.isPlanted = this.isPlanted;
+                newSoilScript.isWatered = true;
+                newSoilScript.growthStage = this.growthStage;
+                newSoilScript.currentPlant = this.currentPlant;
+
+                // Bitki varsa pozisyonunu koru
+                if (newSoilScript.currentPlant != null)
+                {
+                    newSoilScript.currentPlant.transform.SetParent(newWetTile.transform);
+                }
+
+                // Eðer bu tarla þu an seçiliyse, yeni oluþan ýslak tarlayý seçili yap
+                if (selectedTile == this)
+                {
+                    selectedTile = newSoilScript;
+                }
+            }
+
+            // Eski kuru tarlayý sahneden sil
+            Destroy(gameObject);
+        }
+    }
+
     public void Harvest()
     {
         if (isPlanted && growthStage >= 2)
         {
-            // Death'in toplama animasyonunu tetikler
             if (playerAnimator != null)
             {
                 playerAnimator.SetTrigger("Pickup");
             }
 
-            // Envantere 1 adet ürün ekle
             if (InventoryManager.Instance != null)
             {
                 InventoryManager.Instance.AddItem("Crop", 1);
@@ -139,8 +174,7 @@ public class SoilTile : MonoBehaviour
             growthStage = 0;
             currentPlant = null;
 
-            UpdateColor();
-
+            // Ýsteðe baðlý: Hasat edilince tekrar kuru tarla modeline dönebilir veya ýslak kalabilir.
             Debug.Log("Death bitkiyi hasat etti!");
         }
         else
@@ -157,16 +191,9 @@ public class SoilTile : MonoBehaviour
     {
         if (selectedTile == this)
         {
-            if (Input.GetKeyDown(KeyCode.R)) WaterTile(); // <-- E yerine R yaptýk!
+            if (Input.GetKeyDown(KeyCode.R)) WaterTile();
             if (Input.GetKeyDown(KeyCode.F)) PlantSeed();
             if (Input.GetKeyDown(KeyCode.H)) Harvest();
         }
-    }
-
-    void UpdateColor()
-    {
-        if (isWatered) tileRenderer.material.color = wetColor;
-        else if (selectedTile == this) tileRenderer.material.color = selectedColor;
-        else tileRenderer.material.color = originalColor;
     }
 }
