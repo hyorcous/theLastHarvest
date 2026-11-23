@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class FarmGrid : MonoBehaviour
@@ -7,7 +8,7 @@ public class FarmGrid : MonoBehaviour
     public int width = 5;
     public int height = 5;
 
-    public float spacing = 1.2f; // Veya senin kullandýðýn spacing deðeri
+    public float spacing = 1f;
 
     void Start()
     {
@@ -26,10 +27,7 @@ public class FarmGrid : MonoBehaviour
                     z * spacing
                 );
 
-                // --- BURAYI DEÐÝÞTÝRÝYORUZ ---
-                // Tarlayý oluþtururken X ekseninde 90 derece döndürerek yatay hale getiriyoruz
-                Quaternion rotation = Quaternion.Euler(90f, 0f, 0f);
-                Instantiate(soilPrefab, position, rotation);
+                Instantiate(soilPrefab, position, Quaternion.identity);
             }
         }
     }
